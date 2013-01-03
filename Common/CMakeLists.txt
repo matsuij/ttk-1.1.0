@@ -5,7 +5,7 @@ add_library(ITKTensor ${TTK_BUILD_TYPE}
   )
 
 target_link_libraries(ITKTensor
-  ITKCommon
+  ${ITK_LIBRARIES} 
   ${TTK_LAPACK_LIBRARIES}
   )
 

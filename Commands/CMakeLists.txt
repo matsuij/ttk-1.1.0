@@ -172,8 +172,7 @@
   add_executable(itkStanleyToITK itkStanleyVectorFieldToITKVectorField.cxx)
 
   TARGET_LINK_LIBRARIES(itkStanleyToITK
-  ITKCommon
-  ITKIO
+  ${ITK_LIBRARIES} 
   )
 
   
@@ -193,26 +192,17 @@
       )
 
     target_link_libraries(AssessRegistrationTensor
-      ITKCommon
-      ITKIO
-      ITKTensor
-      ITKBasicFilters
+      ${ITK_LIBRARIES}
       vtkCommon
       vtkIO
       )
     target_link_libraries(DemonsRegistrationTensor
-      ITKCommon
-      ITKIO
-      ITKTensor
-      ITKBasicFilters
+      ${ITK_LIBRARIES}
       vtkCommon
       vtkIO
       )
     target_link_libraries(LogDomainDemonsRegistrationTensor
-      ITKCommon
-      ITKIO
-      ITKTensor
-      ITKBasicFilters
+      ${ITK_LIBRARIES}
       vtkCommon
       vtkIO
       )

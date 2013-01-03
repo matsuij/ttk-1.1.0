@@ -1494,8 +1494,6 @@ namespace itk
     time_t start;
     time (&start);
     
-    // FIXME uncomment for debug only
-    // itk::MultiThreader::SetGlobalDefaultNumberOfThreads(1);
     
     // Get the image dimension
     itk::ImageIOBase::Pointer imageIO;
