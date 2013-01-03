@@ -457,7 +457,11 @@ SymmetricLogDomainDemonsRegistrationTensorFilter<TFixedImage,TMovingImage,TField
 template <class TFixedImage, class TMovingImage, class TField, class TSolverPrecision>
 void
 SymmetricLogDomainDemonsRegistrationTensorFilter<TFixedImage,TMovingImage,TField,TSolverPrecision>
+#if (ITK_VERSION_MAJOR < 4)
 ::ApplyUpdate(TimeStepType dt)
+#else
+  ::ApplyUpdate(const TimeStepType& dt)
+#endif
 {
 	// If we smooth the update buffer before applying it, then the are
 	// approximating a viscuous problem as opposed to an elastic problem

@@ -168,7 +168,11 @@ protected:
   virtual void AllocateUpdateBuffer();
 
   /** Solve update (if necessary) and apply it update. */
+#if (ITK_VERSION_MAJOR < 4)
   virtual void ApplyUpdate(TimeStepType dt);
+#else
+  virtual void ApplyUpdate(const TimeStepType& dt);
+#endif
 
 private:
   LogDomainDemonsRegistrationTensorFilter(const Self&); //purposely not implemented
