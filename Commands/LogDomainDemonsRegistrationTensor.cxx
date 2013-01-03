@@ -26,7 +26,7 @@
 #include <itkCommand.h>
 #include <itkLogDomainDemonsRegistrationTensorFilter.h>
 #include <itkSymmetricLogDomainDemonsRegistrationTensorFilter.h>
-#include <itkDisplacementFieldJacobianDeterminantFilter.h>
+#include <itkDeformationFieldJacobianDeterminantFilter.h>
 #include <itkGridForwardWarpImageFilter.h>
 #include <itkHistogramMatchingImageFilter.h>
 #include <itkImageFileReader.h>
@@ -61,8 +61,8 @@ struct arguments
   std::string inputFieldFile; /* -b option */
   std::string inputTransformFile; /* -p option */
   std::string outputImageFile; /* -o option */
-  std::string outputDisplacementFieldFile;
-  std::string outputInverseDisplacementFieldFile;
+  std::string outputDeformationFieldFile;
+  std::string outputInverseDeformationFieldFile;
   std::string outputVelocityFieldFile;
   std::string trueFieldFile; /* -r option */
   std::vector<unsigned int> numIterations; /* -i option */
@@ -145,9 +145,9 @@ struct arguments
     << "  Input transform file: " << args.inputTransformFile << std::endl
     << "  Output image file: " << args.outputImageFile << std::endl
     << "  Output deformation field file: "
-    << args.outputDisplacementFieldFile << std::endl
+    << args.outputDeformationFieldFile << std::endl
     << "  Output inverse deformation field file: "
-    << args.outputInverseDisplacementFieldFile << std::endl
+    << args.outputInverseDeformationFieldFile << std::endl
     << "  Output velocity field file: " << args.outputVelocityFieldFile
     << std::endl << "  True deformation field file: "
     << args.trueFieldFile << std::endl
@@ -290,19 +290,19 @@ parseOpts(int argc, char **argv, struct arguments & args)
   command.AddOptionField("OutputImageFile", "filename", MetaCommand::STRING,
       true, "output.mha");
 
-  command.SetOption("OutputDisplacementFieldFile", "", false,
+  command.SetOption("OutputDeformationFieldFile", "", false,
       "Output deformation field filename");
-  command.SetOptionLongTag("OutputDisplacementFieldFile", "outputDef-field");
-  command.AddOptionField("OutputDisplacementFieldFile", "filename",
+  command.SetOptionLongTag("OutputDeformationFieldFile", "outputDef-field");
+  command.AddOptionField("OutputDeformationFieldFile", "filename",
       MetaCommand::STRING, false, "OUTPUTIMAGENAME-deformationField.mha");
 
-  command.SetOption("OutputInverseDisplacementFieldFile", "", false,
+  command.SetOption("OutputInverseDeformationFieldFile", "", false,
       "Output inverse deformation field filename");
-  command.SetOptionLongTag("OutputInverseDisplacementFieldFile",
+  command.SetOptionLongTag("OutputInverseDeformationFieldFile",
       "outputInvDef-field");
-  command.AddOptionField("OutputInverseDisplacementFieldFile", "filename",
+  command.AddOptionField("OutputInverseDeformationFieldFile", "filename",
       MetaCommand::STRING, false,
-      "OUTPUTIMAGENAME-inverseDisplacementField.mha");
+      "OUTPUTIMAGENAME-inverseDeformationField.mha");
 
   command.SetOption("OutputVelocityFieldFile", "", false,
       "Output velocity field filename");
@@ -426,47 +426,47 @@ parseOpts(int argc, char **argv, struct arguments & args)
   args.outputImageFile = command.GetValueAsString("OutputImageFile",
       "filename");
 
-  args.outputDisplacementFieldFile = command.GetValueAsString(
-      "OutputDisplacementFieldFile", "filename");
-  args.outputInverseDisplacementFieldFile = command.GetValueAsString(
-      "OutputInverseDisplacementFieldFile", "filename");
+  args.outputDeformationFieldFile = command.GetValueAsString(
+      "OutputDeformationFieldFile", "filename");
+  args.outputInverseDeformationFieldFile = command.GetValueAsString(
+      "OutputInverseDeformationFieldFile", "filename");
   args.outputVelocityFieldFile = command.GetValueAsString(
       "OutputVelocityFieldFile", "filename");
 
   unsigned int pos = args.outputImageFile.rfind(".");
 
   // Change the extension by -deformationField.mha
-  if ( args.outputDisplacementFieldFile
+  if ( args.outputDeformationFieldFile
       == "OUTPUTIMAGENAME-deformationField.mha" )
     {
-      if ( pos < args.outputDisplacementFieldFile.size() )
+      if ( pos < args.outputDeformationFieldFile.size() )
         {
-          args.outputDisplacementFieldFile = args.outputImageFile;
-          args.outputDisplacementFieldFile.replace(pos,
-              args.outputDisplacementFieldFile.size(), "-deformationField.mha");
+          args.outputDeformationFieldFile = args.outputImageFile;
+          args.outputDeformationFieldFile.replace(pos,
+              args.outputDeformationFieldFile.size(), "-deformationField.mha");
         }
       else
         {
-          args.outputDisplacementFieldFile = args.outputImageFile
+          args.outputDeformationFieldFile = args.outputImageFile
           + "-deformationField.mha";
         }
     }
 
-  // Change the extension by -inverseDisplacementField.mha
-  if ( args.outputInverseDisplacementFieldFile
-      == "OUTPUTIMAGENAME-inverseDisplacementField.mha" )
+  // Change the extension by -inverseDeformationField.mha
+  if ( args.outputInverseDeformationFieldFile
+      == "OUTPUTIMAGENAME-inverseDeformationField.mha" )
     {
-      if ( pos < args.outputInverseDisplacementFieldFile.size() )
+      if ( pos < args.outputInverseDeformationFieldFile.size() )
         {
-          args.outputInverseDisplacementFieldFile = args.outputImageFile;
-          args.outputInverseDisplacementFieldFile.replace(pos,
-              args.outputInverseDisplacementFieldFile.size(),
-              "-inverseDisplacementField.mha");
+          args.outputInverseDeformationFieldFile = args.outputImageFile;
+          args.outputInverseDeformationFieldFile.replace(pos,
+              args.outputInverseDeformationFieldFile.size(),
+              "-inverseDeformationField.mha");
         }
       else
         {
-          args.outputInverseDisplacementFieldFile = args.outputImageFile
-          + "-inverseDisplacementField.mha";
+          args.outputInverseDeformationFieldFile = args.outputImageFile
+          + "-inverseDeformationField.mha";
         }
     }
 
@@ -538,7 +538,7 @@ public:
   typedef itk::Image<VectorRealType, VImageDimension> InternalImageType;
   typedef itk::Vector<VectorRealType, VImageDimension> VectorPixelType;
   typedef itk::Image<VectorPixelType, VImageDimension> VelocityFieldType;
-  typedef itk::Image<VectorPixelType, VImageDimension> DisplacementFieldType;
+  typedef itk::Image<VectorPixelType, VImageDimension> DeformationFieldType;
 
   typedef itk::LogDomainDeformableRegistrationFilter<TensorImageType,
   TensorImageType, VelocityFieldType>
@@ -548,23 +548,23 @@ public:
   TensorImageType, TensorImageType, VelocityFieldType, VectorRealType, SolverPrecision>
   MultiResRegistrationFilterType;
 
-  typedef itk::DisplacementFieldJacobianDeterminantFilter<
-  DisplacementFieldType, VectorRealType> JacobianFilterType;
+  typedef itk::DeformationFieldJacobianDeterminantFilter<
+  DeformationFieldType, VectorRealType> JacobianFilterType;
 
   typedef itk::MinimumMaximumImageCalculator<InternalImageType>
   MinMaxFilterType;
 
-  typedef itk::WarpHarmonicEnergyCalculator<DisplacementFieldType>
+  typedef itk::WarpHarmonicEnergyCalculator<DeformationFieldType>
   HarmonicEnergyCalculatorType;
 
-  typedef itk::VectorCentralDifferenceImageFunction<DisplacementFieldType>
+  typedef itk::VectorCentralDifferenceImageFunction<DeformationFieldType>
   WarpGradientCalculatorType;
 
   typedef typename WarpGradientCalculatorType::OutputType WarpGradientType;
 
   itkNewMacro( Self );
 
-  void SetTrueField(const DisplacementFieldType * truefield)
+  void SetTrueField(const DeformationFieldType * truefield)
   {
     m_TrueField = truefield;
 
@@ -586,7 +586,7 @@ public:
         return;
       }
 
-    typename DisplacementFieldType::ConstPointer deffield = 0;
+    typename DeformationFieldType::ConstPointer deffield = 0;
     unsigned int iter = -1;
     double metricbefore = -1.0;
 
@@ -596,7 +596,7 @@ public:
         iter = filter->GetElapsedIterations() - 1;
         metricbefore = filter->GetMetric();
         deffield = const_cast<LogDomainDeformableRegistrationFilterType *>
-        (filter)->GetDisplacementField();
+        (filter)->GetDeformationField();
       }
     else if ( const MultiResRegistrationFilterType * multiresfilter =
       dynamic_cast< const MultiResRegistrationFilterType * >( object ) )
@@ -618,7 +618,7 @@ public:
         double tmp;
         if (m_TrueField)
           {
-            typedef itk::ImageRegionConstIteratorWithIndex<DisplacementFieldType>
+            typedef itk::ImageRegionConstIteratorWithIndex<DeformationFieldType>
             FieldIteratorType;
             FieldIteratorType currIter(
                 deffield, deffield->GetLargestPossibleRegion() );
@@ -780,7 +780,7 @@ private:
   typename JacobianFilterType::Pointer m_JacobianFilter;
   typename MinMaxFilterType::Pointer m_Minmaxfilter;
   typename HarmonicEnergyCalculatorType::Pointer m_HarmonicEnergyCalculator;
-  typename DisplacementFieldType::ConstPointer m_TrueField;
+  typename DeformationFieldType::ConstPointer m_TrueField;
   typename WarpGradientCalculatorType::Pointer m_TrueWarpGradientCalculator;
   typename WarpGradientCalculatorType::Pointer m_CompWarpGradientCalculator;
 };
@@ -795,7 +795,7 @@ LogDomainDemonsRegistrationTensorFunction(arguments args)
 
   typedef itk::Image<VectorRealType, Dimension> ScalarImageType;
   typedef itk::Image<VectorPixelType, Dimension> VelocityFieldType;
-  typedef itk::Image<VectorPixelType, Dimension> DisplacementFieldType;
+  typedef itk::Image<VectorPixelType, Dimension> DeformationFieldType;
   typedef itk::Image<TensorPixelType, Dimension> TensorImageType;
 
   // Images we use
@@ -900,7 +900,7 @@ LogDomainDemonsRegistrationTensorFunction(arguments args)
             exit( EXIT_FAILURE );
           }
 
-        // Set up the TransformToDisplacementFieldFilter
+        // Set up the TransformToDeformationFieldFilter
         typedef itk::TransformToVelocityFieldSource
         <VelocityFieldType> FieldGeneratorType;
         typedef typename FieldGeneratorType::TransformType TransformType;
@@ -976,8 +976,8 @@ LogDomainDemonsRegistrationTensorFunction(arguments args)
   }//end for mem allocations
 
   // Set up the demons filter output deformation field
-  typename DisplacementFieldType::Pointer defField = 0;
-  typename DisplacementFieldType::Pointer invDefField = 0;
+  typename DeformationFieldType::Pointer defField = 0;
+  typename DeformationFieldType::Pointer invDefField = 0;
   typename VelocityFieldType::Pointer velField = 0;
 
   {//for mem allocations
@@ -1079,8 +1079,8 @@ LogDomainDemonsRegistrationTensorFunction(arguments args)
               }
 
             // Set up the file readers
-            typedef itk::ImageFileReader< DisplacementFieldType > DisplacementFieldReaderType;
-            typename DisplacementFieldReaderType::Pointer fieldReader = DisplacementFieldReaderType::New();
+            typedef itk::ImageFileReader< DeformationFieldType > DeformationFieldReaderType;
+            typename DeformationFieldReaderType::Pointer fieldReader = DeformationFieldReaderType::New();
             fieldReader->SetFileName( args.trueFieldFile.c_str() );
 
             // Update the reader
@@ -1145,11 +1145,11 @@ LogDomainDemonsRegistrationTensorFunction(arguments args)
     // Get various outputs
 
     // Final deformation field
-    defField = multires->GetDisplacementField();
+    defField = multires->GetDeformationField();
     defField->DisconnectPipeline();
 
     // Inverse final deformation field
-    invDefField = multires->GetInverseDisplacementField();
+    invDefField = multires->GetInverseDeformationField();
     invDefField->DisconnectPipeline();
 
     // Final velocity field
@@ -1161,13 +1161,13 @@ LogDomainDemonsRegistrationTensorFunction(arguments args)
 
   // warp the result
   typedef itk::WarpTensorImageFilter
-  < TensorImageType, TensorImageType, DisplacementFieldType > WarperType;
+  < TensorImageType, TensorImageType, DeformationFieldType > WarperType;
   typename WarperType::Pointer warper = WarperType::New();
   warper->SetInput( movingImage );
   warper->SetOutputSpacing( fixedImage->GetSpacing() );
   warper->SetOutputOrigin( fixedImage->GetOrigin() );
   warper->SetOutputDirection( fixedImage->GetDirection() );
-  warper->SetDisplacementField( defField );
+  warper->SetDeformationField( defField );
 
   try
   {
@@ -1217,15 +1217,15 @@ LogDomainDemonsRegistrationTensorFunction(arguments args)
   }
 
   // Write output deformation field
-  if (!args.outputDisplacementFieldFile.empty())
+  if (!args.outputDeformationFieldFile.empty())
     {
       // Write the deformation field as an image of vectors.
       // Note that the file format used for writing the deformation field must be
       // capable of representing multiple components per pixel. This is the case
       // for the MetaImage and VTK file formats for example.
-      typedef itk::ImageFileWriter< DisplacementFieldType > FieldWriterType;
+      typedef itk::ImageFileWriter< DeformationFieldType > FieldWriterType;
       typename FieldWriterType::Pointer fieldWriter = FieldWriterType::New();
-      fieldWriter->SetFileName( args.outputDisplacementFieldFile.c_str() );
+      fieldWriter->SetFileName( args.outputDeformationFieldFile.c_str() );
       fieldWriter->SetInput( defField );
       fieldWriter->SetUseCompression( true );
 
@@ -1242,15 +1242,15 @@ LogDomainDemonsRegistrationTensorFunction(arguments args)
     }
 
   // Write output inverse deformation field
-  if (!args.outputInverseDisplacementFieldFile.empty())
+  if (!args.outputInverseDeformationFieldFile.empty())
     {
       // Write the inverse deformation field as an image of vectors.
       // Note that the file format used for writing the inverse deformation field must be
       // capable of representing multiple components per pixel. This is the case
       // for the MetaImage and VTK file formats for example.
-      typedef itk::ImageFileWriter< DisplacementFieldType > FieldWriterType;
+      typedef itk::ImageFileWriter< DeformationFieldType > FieldWriterType;
       typename FieldWriterType::Pointer fieldWriter = FieldWriterType::New();
-      fieldWriter->SetFileName( args.outputInverseDisplacementFieldFile.c_str() );
+      fieldWriter->SetFileName( args.outputInverseDeformationFieldFile.c_str() );
       fieldWriter->SetInput( invDefField );
       fieldWriter->SetUseCompression( true );
 
@@ -1336,13 +1336,13 @@ LogDomainDemonsRegistrationTensorFunction(arguments args)
         }
 
       typedef itk::WarpImageFilter
-      < GridImageType, GridImageType, DisplacementFieldType > GridWarperType;
+      < GridImageType, GridImageType, DeformationFieldType > GridWarperType;
       typename GridWarperType::Pointer gridwarper = GridWarperType::New();
       gridwarper->SetInput( gridImage );
       gridwarper->SetOutputSpacing( fixedImage->GetSpacing() );
       gridwarper->SetOutputOrigin( fixedImage->GetOrigin() );
       gridwarper->SetOutputDirection( fixedImage->GetDirection() );
-      gridwarper->SetDisplacementField( defField );
+      gridwarper->SetDeformationField( defField );
 
       // Write warped grid to file
       typedef itk::ImageFileWriter< GridImageType > GridWriterType;
@@ -1368,7 +1368,7 @@ LogDomainDemonsRegistrationTensorFunction(arguments args)
   if ( args.verbosity > 0 )
     {
       typedef itk::Image< unsigned char, Dimension > GridImageType;
-      typedef itk::GridForwardWarpImageFilter<DisplacementFieldType, GridImageType> GridForwardWarperType;
+      typedef itk::GridForwardWarpImageFilter<DeformationFieldType, GridImageType> GridForwardWarperType;
 
       typename GridForwardWarperType::Pointer fwWarper = GridForwardWarperType::New();
       fwWarper->SetInput(defField);
@@ -1436,8 +1436,8 @@ LogDomainDemonsRegistrationTensorFunction(arguments args)
   // Create and write jacobian of the deformation field
   if ( args.verbosity > 0 )
     {
-      typedef itk::DisplacementFieldJacobianDeterminantFilter
-      <DisplacementFieldType, VectorRealType> JacobianFilterType;
+      typedef itk::DeformationFieldJacobianDeterminantFilter
+      <DeformationFieldType, VectorRealType> JacobianFilterType;
       typename JacobianFilterType::Pointer jacobianFilter = JacobianFilterType::New();
       jacobianFilter->SetInput( defField );
       jacobianFilter->SetUseImageSpacing( true );

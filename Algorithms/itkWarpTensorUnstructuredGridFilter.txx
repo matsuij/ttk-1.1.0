@@ -30,8 +30,8 @@ namespace itk
 /**
  * Default constructor.
  */
-template <class TDisplacementField>
-WarpTensorUnstructuredGridFilter<TDisplacementField>
+template <class TDeformationField>
+WarpTensorUnstructuredGridFilter<TDeformationField>
 ::WarpTensorUnstructuredGridFilter()
 {
   // Setup the number of required inputs
@@ -43,19 +43,19 @@ WarpTensorUnstructuredGridFilter<TDisplacementField>
   
   m_ReorientationStrategy = FS;
 
-  m_DisplacementField = 0;
-  m_InverseDisplacementField = 0;
+  m_DeformationField = 0;
+  m_InverseDeformationField = 0;
 
-  m_InverseDisplacementInterpolator = DisplacementInterpolatorType::New();
+  m_InverseDeformationInterpolator = DeformationInterpolatorType::New();
   
 }
 
 /**
  * Standard PrintSelf method.
  */
-template <class TDisplacementField>
+template <class TDeformationField>
 void
-WarpTensorUnstructuredGridFilter<TDisplacementField>
+WarpTensorUnstructuredGridFilter<TDeformationField>
 ::PrintSelf(std::ostream& os, Indent indent) const
 {
 
@@ -67,9 +67,9 @@ WarpTensorUnstructuredGridFilter<TDisplacementField>
   
 }
 
-template <class TDisplacementField>
+template <class TDeformationField>
 void
-WarpTensorUnstructuredGridFilter<TDisplacementField>
+WarpTensorUnstructuredGridFilter<TDeformationField>
 ::GenerateInputRequestedRegion()
 {
 
@@ -78,7 +78,7 @@ WarpTensorUnstructuredGridFilter<TDisplacementField>
 
   // just propagate up the output requested region for the 
   // deformation field.
-  DisplacementFieldPointer fieldPtr = this->GetDisplacementField();
+  DeformationFieldPointer fieldPtr = this->GetDeformationField();
   if( fieldPtr )
   {
     fieldPtr->SetRequestedRegion( fieldPtr->GetLargestPossibleRegion() );
@@ -87,20 +87,20 @@ WarpTensorUnstructuredGridFilter<TDisplacementField>
 }
 
 
-template <class TDisplacementField>
+template <class TDeformationField>
 void
-WarpTensorUnstructuredGridFilter<TDisplacementField>
+WarpTensorUnstructuredGridFilter<TDeformationField>
 ::GenerateOutputInformation()
 {
   // call the superclass's implementation of this method
   Superclass::GenerateOutputInformation();
 
 
-  if( !this->GetDisplacementField() )
+  if( !this->GetDeformationField() )
     {
     itkExceptionMacro(<< "deformation field not set");
     }
-  if( !this->GetInverseDisplacementField() )
+  if( !this->GetInverseDeformationField() )
     {
     itkExceptionMacro(<< "inverse deformation field not set");
     }
@@ -108,7 +108,7 @@ WarpTensorUnstructuredGridFilter<TDisplacementField>
   
   // compute the Jacobian:
   typename JacobianFilterType::Pointer jacobianFilter = JacobianFilterType::New();
-  jacobianFilter->SetInput( this->GetDisplacementField() );
+  jacobianFilter->SetInput( this->GetDeformationField() );
   jacobianFilter->SetUseImageSpacing( true );
   try
   {
@@ -122,7 +122,7 @@ WarpTensorUnstructuredGridFilter<TDisplacementField>
   
   m_Jacobian = jacobianFilter->GetOutput();
 
-  m_InverseDisplacementInterpolator->SetInputImage (this->GetInverseDisplacementField());
+  m_InverseDeformationInterpolator->SetInputImage (this->GetInverseDeformationField());
 
   this->GenerateData();
 }
@@ -132,14 +132,14 @@ WarpTensorUnstructuredGridFilter<TDisplacementField>
 /**
  * Compute the output for the region specified by outputRegionForThread.
  */
-template <class TDisplacementField>
+template <class TDeformationField>
 void
-WarpTensorUnstructuredGridFilter<TDisplacementField>
+WarpTensorUnstructuredGridFilter<TDeformationField>
 ::GenerateData()
 {
 
-  DisplacementFieldPointer fieldPtr = this->GetDisplacementField();
-  DisplacementFieldPointer inversefieldPtr = this->GetInverseDisplacementField();
+  DeformationFieldPointer fieldPtr = this->GetDeformationField();
+  DeformationFieldPointer inversefieldPtr = this->GetInverseDeformationField();
   JacobianPointer jacobianPtr = this->GetJacobian();
 
   RegionType region = fieldPtr->GetLargestPossibleRegion();
@@ -164,7 +164,7 @@ WarpTensorUnstructuredGridFilter<TDisplacementField>
       continue;
     }
     
-    DisplacementType d = m_InverseDisplacementInterpolator->Evaluate (m_Points[i]);
+    DeformationType d = m_InverseDeformationInterpolator->Evaluate (m_Points[i]);
     
     PointType P = m_Points[i] + d;    
 

@@ -72,7 +72,7 @@ namespace itk
     typedef TensorImageType::PixelType                                     TensorType;
     typedef itk::ImageRegionIterator<TensorImageType>                      TensorIteratorType;
     typedef itk::Matrix<ScalarType, 3, 3>                                  MatrixType;
-    typedef itk::Vector<double, 3>                                         DisplacementType;
+    typedef itk::Vector<double, 3>                                         DeformationType;
     typedef TensorImageType::PointType                                     PointType;
     typedef std::vector<TensorType> TensorArrayType;
     typedef std::vector<PointType> PointArrayType;

@@ -1,6 +1,6 @@
-#ifndef __itkDisplacementFieldCompositionFilter_txx
-#define __itkDisplacementFieldCompositionFilter_txx
-#include "itkDisplacementFieldCompositionFilter.h"
+#ifndef __itkDeformationFieldCompositionFilter_txx
+#define __itkDeformationFieldCompositionFilter_txx
+#include "itkDeformationFieldCompositionFilter.h"
 
 #include <itkProgressAccumulator.h>
 #include <itkVectorLinearInterpolateNearestNeighborExtrapolateImageFunction.h>
@@ -12,8 +12,8 @@ namespace itk
  * Default constructor.
  */
 template <class TInputImage, class TOutputImage>
-DisplacementFieldCompositionFilter<TInputImage,TOutputImage>
-::DisplacementFieldCompositionFilter()
+DeformationFieldCompositionFilter<TInputImage,TOutputImage>
+::DeformationFieldCompositionFilter()
 {
   // Setup the number of required inputs
   this->SetNumberOfRequiredInputs( 2 );  
@@ -24,7 +24,7 @@ DisplacementFieldCompositionFilter<TInputImage,TOutputImage>
 
   // Setup the default interpolator
   typedef VectorLinearInterpolateNearestNeighborExtrapolateImageFunction<
-    DisplacementFieldType,double> DefaultFieldInterpolatorType;
+    DeformationFieldType,double> DefaultFieldInterpolatorType;
   m_Warper->SetInterpolator( DefaultFieldInterpolatorType::New() );
 
   // Setup the adder to be inplace
@@ -37,7 +37,7 @@ DisplacementFieldCompositionFilter<TInputImage,TOutputImage>
  */
 template <class TInputImage, class TOutputImage>
 void
-DisplacementFieldCompositionFilter<TInputImage,TOutputImage>
+DeformationFieldCompositionFilter<TInputImage,TOutputImage>
 ::PrintSelf(std::ostream& os, Indent indent) const
 {
   Superclass::PrintSelf(os, indent);
@@ -51,14 +51,14 @@ DisplacementFieldCompositionFilter<TInputImage,TOutputImage>
  */
 template <class TInputImage, class TOutputImage>
 void 
-DisplacementFieldCompositionFilter<TInputImage,TOutputImage>
+DeformationFieldCompositionFilter<TInputImage,TOutputImage>
 ::GenerateData()
 {
-  DisplacementFieldConstPointer leftField = this->GetInput(0);
+  DeformationFieldConstPointer leftField = this->GetInput(0);
 #if ( ITK_VERSION_MAJOR < 3 ) || ( ITK_VERSION_MAJOR == 3 && ITK_VERSION_MINOR < 13 )
-  DisplacementFieldPointer rightField = const_cast<DisplacementFieldType*>(this->GetInput(1));
+  DeformationFieldPointer rightField = const_cast<DeformationFieldType*>(this->GetInput(1));
 #else
-  DisplacementFieldConstPointer rightField = this->GetInput(1);
+  DeformationFieldConstPointer rightField = this->GetInput(1);
 #endif
 
   // Sanity checks
@@ -69,7 +69,7 @@ DisplacementFieldCompositionFilter<TInputImage,TOutputImage>
 
   // Set up mini-pipeline
   m_Warper->SetInput( leftField );
-  m_Warper->SetDisplacementField( rightField );
+  m_Warper->SetDeformationField( rightField );
   m_Warper->SetOutputOrigin( rightField->GetOrigin() );
   m_Warper->SetOutputSpacing( rightField->GetSpacing() );
   m_Warper->SetOutputDirection( rightField->GetDirection() );

@@ -32,7 +32,7 @@ namespace itk
 {
 
 template <
-  class TDisplacementField
+  class TDeformationField
   >
 class ITK_EXPORT WarpTensorUnstructuredGridFilter :
     public ProcessObject
@@ -53,40 +53,40 @@ public:
   itkTypeMacro( WarpTensorUnstructuredGridFilter, ProcessObject );
 
   /** Typedef to describe the region type. */
-  typedef typename TDisplacementField::RegionType RegionType;
+  typedef typename TDeformationField::RegionType RegionType;
 
   /** Inherit some types from the superclass. */
-  typedef TDisplacementField                           DisplacementFieldType;
-  typedef typename DisplacementFieldType::Pointer      DisplacementFieldPointer;
-  typedef typename DisplacementFieldType::ConstPointer DisplacementFieldConstPointer;
-  typedef typename DisplacementFieldType::SpacingType  SpacingType;
-  typedef typename DisplacementFieldType::IndexType    IndexType;
+  typedef TDeformationField                           DeformationFieldType;
+  typedef typename DeformationFieldType::Pointer      DeformationFieldPointer;
+  typedef typename DeformationFieldType::ConstPointer DeformationFieldConstPointer;
+  typedef typename DeformationFieldType::SpacingType  SpacingType;
+  typedef typename DeformationFieldType::IndexType    IndexType;
 
 
   
   /** Determine the image dimension. */
-  itkStaticConstMacro(DisplacementFieldDimension, unsigned int,
-                      TDisplacementField::ImageDimension );
+  itkStaticConstMacro(DeformationFieldDimension, unsigned int,
+                      TDeformationField::ImageDimension );
 
   itkStaticConstMacro(VectorDimension, unsigned int,
-	  TDisplacementField::PixelType::Dimension);
+	  TDeformationField::PixelType::Dimension);
 
-  typedef Matrix<double, DisplacementFieldDimension, VectorDimension> JacobianType;
-  typedef Image<JacobianType, DisplacementFieldDimension>             JacobianImageType;
+  typedef Matrix<double, DeformationFieldDimension, VectorDimension> JacobianType;
+  typedef Image<JacobianType, DeformationFieldDimension>             JacobianImageType;
   typedef typename JacobianImageType::Pointer             JacobianPointer;
-  typedef WarpJacobianFilter<TDisplacementField, JacobianImageType>  JacobianFilterType;
+  typedef WarpJacobianFilter<TDeformationField, JacobianImageType>  JacobianFilterType;
 
   /** Interpolator typedef support. */
-  typedef VectorLinearInterpolateImageFunction<DisplacementFieldType,double>   DisplacementInterpolatorType;
-  typedef typename DisplacementInterpolatorType::Pointer   DisplacementInterpolatorPointer;
+  typedef VectorLinearInterpolateImageFunction<DeformationFieldType,double>   DeformationInterpolatorType;
+  typedef typename DeformationInterpolatorType::Pointer   DeformationInterpolatorPointer;
 /*   typedef LinearInterpolateImageFunction<JacobianImageType,double>   JacobianInterpolatorType; */
 /*   typedef typename JacobianInterpolatorType::Pointer   JacobianInterpolatorPointer; */
   
   itkGetObjectMacro(Jacobian, JacobianImageType);
 
-  /** Displacement field typedef support. */
-  typedef typename DisplacementFieldType::PixelType DisplacementType;
-  typedef typename DisplacementFieldType::PointType PointType;
+  /** Deformation field typedef support. */
+  typedef typename DeformationFieldType::PixelType DeformationType;
+  typedef typename DeformationFieldType::PointType PointType;
 
   typedef Tensor<double, VectorDimension> TensorType;
   typedef TensorType PixelType;
@@ -97,12 +97,12 @@ public:
   typedef double CoordRepType;
 
   /** Type for representing the direction of the output image */
-  typedef typename DisplacementFieldType::DirectionType     DirectionType;
+  typedef typename DeformationFieldType::DirectionType     DirectionType;
 
-  itkGetObjectMacro (DisplacementField, DisplacementFieldType);
-  itkSetObjectMacro (DisplacementField, DisplacementFieldType);
-  itkGetObjectMacro (InverseDisplacementField, DisplacementFieldType);
-  itkSetObjectMacro (InverseDisplacementField, DisplacementFieldType);  
+  itkGetObjectMacro (DeformationField, DeformationFieldType);
+  itkSetObjectMacro (DeformationField, DeformationFieldType);
+  itkGetObjectMacro (InverseDeformationField, DeformationFieldType);
+  itkSetObjectMacro (InverseDeformationField, DeformationFieldType);  
 
   /** Set the edge padding value */
   itkSetMacro( EdgePaddingValue, PixelType );
@@ -162,7 +162,7 @@ private:
   
   ReorientationType m_ReorientationStrategy;
 
-  DisplacementInterpolatorPointer m_InverseDisplacementInterpolator;
+  DeformationInterpolatorPointer m_InverseDeformationInterpolator;
 /*   JacobianInterpolatorPointer m_JacobianInterpolator; */
   
   PointArrayType m_Points;
@@ -170,8 +170,8 @@ private:
   TensorArrayType m_Tensors;
   TensorArrayType m_OutputTensors;
 
-  DisplacementFieldPointer m_DisplacementField;
-  DisplacementFieldPointer m_InverseDisplacementField;
+  DeformationFieldPointer m_DeformationField;
+  DeformationFieldPointer m_InverseDeformationField;
   
   
 };

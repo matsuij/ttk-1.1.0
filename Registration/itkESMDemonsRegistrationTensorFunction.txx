@@ -102,10 +102,10 @@ CastMatrix(FromMatrixType fromMatrix)
 /*
  * Default constructor
  */
-template < class TFixedImage, class TMovingImage, class TDisplacementField,
+template < class TFixedImage, class TMovingImage, class TDeformationField,
 class TSolverPrecision >
 ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage,
-TDisplacementField, TSolverPrecision>::ESMDemonsRegistrationTensorFunction()
+TDeformationField, TSolverPrecision>::ESMDemonsRegistrationTensorFunction()
 {
   if(ImageDimension != 3)
     {
@@ -166,11 +166,11 @@ TDisplacementField, TSolverPrecision>::ESMDemonsRegistrationTensorFunction()
 /*
  * Standard "PrintSelf" method.
  */
-template < class TFixedImage, class TMovingImage, class TDisplacementField,
+template < class TFixedImage, class TMovingImage, class TDeformationField,
 class TSolverPrecision >
 void
 ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage,
-TDisplacementField, TSolverPrecision>::PrintSelf(std::ostream& os,
+TDeformationField, TSolverPrecision>::PrintSelf(std::ostream& os,
     Indent indent) const
     {
       Superclass::PrintSelf(os, indent);
@@ -197,11 +197,11 @@ TDisplacementField, TSolverPrecision>::PrintSelf(std::ostream& os,
 /*
  * Set the function state values before each iteration
  */
-template < class TFixedImage, class TMovingImage, class TDisplacementField,
+template < class TFixedImage, class TMovingImage, class TDeformationField,
 class TSolverPrecision >
 void
 ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage,
-TDisplacementField, TSolverPrecision>::InitializeIteration()
+TDeformationField, TSolverPrecision>::InitializeIteration()
 {
   if ( !this->GetFixedImage() )
     {
@@ -243,9 +243,9 @@ TDisplacementField, TSolverPrecision>::InitializeIteration()
           this->GetFixedImage()->GetOrigin() );
       m_MovingImageWarper->SetOutputDirection( this->GetFixedImage()->GetDirection() );
       m_MovingImageWarper->SetInput( this->GetMovingImage() );
-      m_MovingImageWarper->SetDisplacementField( this->GetDisplacementField() );
+      m_MovingImageWarper->SetDeformationField( this->GetDeformationField() );
       m_MovingImageWarper->GetOutput()->SetRequestedRegion(
-          this->GetDisplacementField()->GetRequestedRegion() );
+          this->GetDeformationField()->GetRequestedRegion() );
       m_MovingImageWarper->Update();
     }
   else
@@ -256,15 +256,15 @@ TDisplacementField, TSolverPrecision>::InitializeIteration()
           this->GetFixedImage()->GetOrigin() );
       m_MovingImageWOReorientationWarper->SetOutputDirection( this->GetFixedImage()->GetDirection() );
       m_MovingImageWOReorientationWarper->SetInput( this->GetMovingImage() );
-      m_MovingImageWOReorientationWarper->SetDisplacementField(
-          this->GetDisplacementField() );
+      m_MovingImageWOReorientationWarper->SetDeformationField(
+          this->GetDeformationField() );
       m_MovingImageWOReorientationWarper->GetOutput()->SetRequestedRegion(
-          this->GetDisplacementField()->GetRequestedRegion() );
+          this->GetDeformationField()->GetRequestedRegion() );
       m_MovingImageWOReorientationWarper->Update();
 
       typename JacobianFilterType::Pointer jacobianFilter =
         JacobianFilterType::New();
-      jacobianFilter->SetInput( this->GetDisplacementField() );
+      jacobianFilter->SetInput( this->GetDeformationField() );
       jacobianFilter->SetUseImageSpacing( true );
 
       try
@@ -361,9 +361,9 @@ TDisplacementField, TSolverPrecision>::InitializeIteration()
  * reorientation this just stores the system to be solved to find the update
  * (and returns a zero update).
  */
-template <class TFixedImage, class TMovingImage, class TDisplacementField, class TSolverPrecision>
-typename ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage, TDisplacementField, TSolverPrecision>::PixelType
-ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage, TDisplacementField, TSolverPrecision>
+template <class TFixedImage, class TMovingImage, class TDeformationField, class TSolverPrecision>
+typename ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage, TDeformationField, TSolverPrecision>::PixelType
+ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage, TDeformationField, TSolverPrecision>
 ::ComputeUpdate(const NeighborhoodType &it, void * gd,
     const FloatOffsetType& itkNotUsed(offset))
 {
@@ -430,23 +430,23 @@ ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage, TDisplacementFiel
   const TensorType movingValue = static_cast<TensorType>( movingPixValue );
 
   // jacobian of transformation
-  DisplacementFieldMatrixType J;
+  DeformationFieldMatrixType J;
   if ( this->m_UseRotationType == Rotation )
     {
       J = m_Jacobian->GetPixel(index);
     }
 
   // rotation component of jacobian
-  DisplacementFieldMatrixType R;
-  DisplacementFieldMatrixType JJtsqrt;
+  DeformationFieldMatrixType R;
+  DeformationFieldMatrixType JJtsqrt;
   if ( m_UseRotationType == Rotation )
     {
-      DisplacementFieldTensorType JJt;
+      DeformationFieldTensorType JJt;
       JJt.SetVnlMatrix(J.GetVnlMatrix() * J.GetTranspose());
 
-      JJtsqrt = DisplacementFieldMatrixType(JJt.Sqrt().GetVnlMatrix());
+      JJtsqrt = DeformationFieldMatrixType(JJt.Sqrt().GetVnlMatrix());
 
-      R = DisplacementFieldMatrixType(JJtsqrt.GetInverse()*J.GetVnlMatrix());
+      R = DeformationFieldMatrixType(JJtsqrt.GetInverse()*J.GetVnlMatrix());
     }
 
   // gradient of image we actually use depends on gradient type
@@ -510,8 +510,8 @@ ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage, TDisplacementFiel
     {
       // ApplyMatrix sets the tensor to be R*T*R' as we want
       reorientedMovingValue = reorientedMovingValue.ApplyMatrix(
-          CastMatrix<DisplacementFieldMatrixType, TensorMatrixType>(
-              DisplacementFieldMatrixType(R.GetTranspose())));
+          CastMatrix<DeformationFieldMatrixType, TensorMatrixType>(
+              DeformationFieldMatrixType(R.GetTranspose())));
     }
 
   TensorType speedValue;
@@ -575,20 +575,20 @@ ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage, TDisplacementFiel
 
       for (unsigned int i = 0; i < 6; i++)
         {
-          DisplacementFieldVectorInternalType gradientRow =
-            CastVector<TensorGradientVectorType, DisplacementFieldVectorType>(
+          DeformationFieldVectorInternalType gradientRow =
+            CastVector<TensorGradientVectorType, DeformationFieldVectorType>(
                 TensorGradientVectorType(usedGradient[i])).GetVnlVector();
 
           if(i==1 || i==3 || i==4)
             {
-              hessian += CastMatrix<DisplacementFieldMatrixType, HessianType>(
-                  DisplacementFieldMatrixType(outer_product(gradientRow, gradientRow)))
+              hessian += CastMatrix<DeformationFieldMatrixType, HessianType>(
+                  DeformationFieldMatrixType(outer_product(gradientRow, gradientRow)))
                   / varMatrix(i,0) * 2.0;
             }
           else
             {
-              hessian += CastMatrix<DisplacementFieldMatrixType, HessianType>(
-                  DisplacementFieldMatrixType(outer_product(gradientRow, gradientRow)))
+              hessian += CastMatrix<DeformationFieldMatrixType, HessianType>(
+                  DeformationFieldMatrixType(outer_product(gradientRow, gradientRow)))
                   / varMatrix(i,0);
             }
         }
@@ -609,7 +609,7 @@ ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage, TDisplacementFiel
 
           for( unsigned int j = 0; j < ImageDimension; j++ )
             {
-              update[j] = static_cast<DisplacementFieldRealType>(augmentedUpdate[j]);
+              update[j] = static_cast<DeformationFieldRealType>(augmentedUpdate[j]);
             }
         }
       else
@@ -662,7 +662,7 @@ ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage, TDisplacementFiel
       neighborIndexShifts[0] = 1;
       neighborIndexShifts[1] = -1;
 
-      DisplacementFieldRealType neighborFactors[2];
+      DeformationFieldRealType neighborFactors[2];
       neighborFactors[0] = 1;
       neighborFactors[1] = -1;
 
@@ -768,49 +768,49 @@ ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage, TDisplacementFiel
           // notation is complicated - see the appendix of the DT-REFinD paper
 
           // precompute derivatives of rotation wrt Jacobian components
-          DisplacementFieldMatrixType dRdJ[3][3];
+          DeformationFieldMatrixType dRdJ[3][3];
 
           // prefactor = r' (tr(S)I - S)^{-1} r
-          DisplacementFieldRealType traceS = 0;
+          DeformationFieldRealType traceS = 0;
           for (unsigned int row=0; row < TensorType::Dimension; row++)
             {
               traceS += JJtsqrt(row, row);
             }
-          DisplacementFieldMatrixType prefactor;
+          DeformationFieldMatrixType prefactor;
           prefactor.SetIdentity();
           prefactor = prefactor * traceS - JJtsqrt;
-          prefactor = DisplacementFieldMatrixType(prefactor.GetInverse());
-          prefactor = DisplacementFieldMatrixType(R.GetTranspose())*prefactor*R;
+          prefactor = DeformationFieldMatrixType(prefactor.GetInverse());
+          prefactor = DeformationFieldMatrixType(R.GetTranspose())*prefactor*R;
 
-          DisplacementFieldMatrixType Rt = DisplacementFieldMatrixType(
+          DeformationFieldMatrixType Rt = DeformationFieldMatrixType(
               R.GetTranspose());
 
           for (unsigned int i = 0; i < 3; i++) // uvw
             {
-              DisplacementFieldVectorType xJ;
+              DeformationFieldVectorType xJ;
               xJ[0] = 0; xJ[1] = Rt(2, i); xJ[2] = -Rt(1, i);
               dRdJ[i][0] = R * -1.0 * CreateCrossProductMatrix(prefactor * xJ);
 
-              DisplacementFieldVectorType yJ;
+              DeformationFieldVectorType yJ;
               yJ[0] = -Rt(2, i); yJ[1] = 0; yJ[2] = Rt(0, i);
               dRdJ[i][1] = R * -1.0 * CreateCrossProductMatrix(prefactor * yJ);
 
-              DisplacementFieldVectorType zJ;
+              DeformationFieldVectorType zJ;
               zJ[0] = Rt(1, i); zJ[1] = -Rt(0, i); zJ[2] = 0;
               dRdJ[i][2] = R * -1.0 * CreateCrossProductMatrix(prefactor * zJ);
             }
 
           // precompute constant term in gradient
-          DisplacementFieldMatrixType M =
-            CastMatrix<TensorMatrixType, DisplacementFieldMatrixType>(
+          DeformationFieldMatrixType M =
+            CastMatrix<TensorMatrixType, DeformationFieldMatrixType>(
                 TensorMatrixType(movingValue.GetVnlMatrix()));
-          DisplacementFieldMatrixType RtM = Rt * M;
+          DeformationFieldMatrixType RtM = Rt * M;
 
           // now find and store local gradient contributions in neighborhood
-          DisplacementFieldMatrixType neighborJ;
+          DeformationFieldMatrixType neighborJ;
 
-          DisplacementFieldMatrixType dR;
-          DisplacementFieldMatrixType RtMdR;
+          DeformationFieldMatrixType dR;
+          DeformationFieldMatrixType RtMdR;
           TensorMatrixType gradMatrix;
 
           TensorType derivs[3];
@@ -846,8 +846,8 @@ ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage, TDisplacementFiel
 
                           RtMdR = RtM * dR;
                           gradMatrix = CastMatrix<
-                          DisplacementFieldMatrixType, TensorMatrixType>(
-                              DisplacementFieldMatrixType(RtMdR.GetTranspose()
+                          DeformationFieldMatrixType, TensorMatrixType>(
+                              DeformationFieldMatrixType(RtMdR.GetTranspose()
                                   + RtMdR.GetVnlMatrix()));
 
                           derivs[i].SetVnlMatrix(gradMatrix.GetVnlMatrix());
@@ -900,12 +900,12 @@ ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage, TDisplacementFiel
 /**
  * Solves system and grafts result to pointer.
  */
-template < class TFixedImage, class TMovingImage, class TDisplacementField,
+template < class TFixedImage, class TMovingImage, class TDeformationField,
 class TSolverPrecision >
 void
 ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage,
-TDisplacementField, TSolverPrecision>::SolveUpdate(
-    DisplacementFieldTypePointer updateField)
+TDeformationField, TSolverPrecision>::SolveUpdate(
+    DeformationFieldTypePointer updateField)
 {
 
   // for timing
@@ -971,10 +971,10 @@ TDisplacementField, TSolverPrecision>::SolveUpdate(
   LongIteratorType longIt = LongIteratorType(m_ForegroundRef,
       m_ForegroundRef->GetLargestPossibleRegion());
 
-  typedef typename itk::ImageRegionIterator< DisplacementFieldType > vfIteratorType;
+  typedef typename itk::ImageRegionIterator< DeformationFieldType > vfIteratorType;
   vfIteratorType vfIt = vfIteratorType(updateField, updateField->GetLargestPossibleRegion());
 
-  DisplacementFieldVectorType displacement;
+  DeformationFieldVectorType displacement;
   for(longIt.GoToBegin(), vfIt.GoToBegin(); !longIt.IsAtEnd(); ++longIt, ++vfIt)
     {
       if(longIt.Get() >= 0)
@@ -1049,11 +1049,11 @@ TDisplacementField, TSolverPrecision>::SolveUpdate(
 }
 
 /** Insert a single tensor into the residual in the system to solve */
-template < class TFixedImage, class TMovingImage, class TDisplacementField,
+template < class TFixedImage, class TMovingImage, class TDeformationField,
 class TSolverPrecision >
 void
 ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage,
-TDisplacementField, TSolverPrecision>::InsertTensorIntoResidual(
+TDeformationField, TSolverPrecision>::InsertTensorIntoResidual(
     const TensorType t, unsigned long startPosition)
 {
   (*m_Residual)[startPosition + 0] = t.GetNthComponent(0);
@@ -1066,11 +1066,11 @@ TDisplacementField, TSolverPrecision>::InsertTensorIntoResidual(
 
 /** Insert a single tensor gradient into the sparse matrix in the system to
  * solve */
-template < class TFixedImage, class TMovingImage, class TDisplacementField,
+template < class TFixedImage, class TMovingImage, class TDeformationField,
 class TSolverPrecision >
 void
 ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage,
-TDisplacementField, TSolverPrecision>::InsertTensorGradientIntoGradient(
+TDeformationField, TSolverPrecision>::InsertTensorGradientIntoGradient(
     const TensorGradientType grad, unsigned long startRow,
     unsigned long startCol)
 {
@@ -1088,11 +1088,11 @@ TDisplacementField, TSolverPrecision>::InsertTensorGradientIntoGradient(
 /*
  * Update the metric and release the per-thread-global data.
  */
-template < class TFixedImage, class TMovingImage, class TDisplacementField,
+template < class TFixedImage, class TMovingImage, class TDeformationField,
 class TSolverPrecision >
 void
 ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage,
-TDisplacementField, TSolverPrecision>::ReleaseGlobalDataPointer(void *gd) const
+TDeformationField, TSolverPrecision>::ReleaseGlobalDataPointer(void *gd) const
 {
   GlobalDataStruct * globalData = (GlobalDataStruct *) gd;
 
@@ -1114,12 +1114,12 @@ TDisplacementField, TSolverPrecision>::ReleaseGlobalDataPointer(void *gd) const
 }
 
 /** Element wise power of a tensor. */
-template < class TFixedImage, class TMovingImage, class TDisplacementField,
+template < class TFixedImage, class TMovingImage, class TDeformationField,
 class TSolverPrecision >
 typename ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage,
-TDisplacementField, TSolverPrecision>::TensorType
+TDeformationField, TSolverPrecision>::TensorType
 ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage,
-TDisplacementField, TSolverPrecision>::ElementWisePowerTensor(
+TDeformationField, TSolverPrecision>::ElementWisePowerTensor(
     const TensorType tensor, double power)
 {
   TensorType outTensor;
@@ -1133,12 +1133,12 @@ TDisplacementField, TSolverPrecision>::ElementWisePowerTensor(
 }
 
 /** Element wise multiplication of a tensor by a another. */
-template < class TFixedImage, class TMovingImage, class TDisplacementField,
+template < class TFixedImage, class TMovingImage, class TDeformationField,
 class TSolverPrecision >
 typename ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage,
-TDisplacementField, TSolverPrecision>::TensorType
+TDeformationField, TSolverPrecision>::TensorType
 ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage,
-TDisplacementField, TSolverPrecision>::ElementWiseMultiplyTensor(
+TDeformationField, TSolverPrecision>::ElementWiseMultiplyTensor(
     const TensorType tensor1, const TensorType tensor2)
 {
   TensorType outTensor;
@@ -1153,12 +1153,12 @@ TDisplacementField, TSolverPrecision>::ElementWiseMultiplyTensor(
 }
 
 /** Element wise division of a tensor by a another. */
-template < class TFixedImage, class TMovingImage, class TDisplacementField,
+template < class TFixedImage, class TMovingImage, class TDeformationField,
 class TSolverPrecision >
 typename ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage,
-TDisplacementField, TSolverPrecision>::TensorType
+TDeformationField, TSolverPrecision>::TensorType
 ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage,
-TDisplacementField, TSolverPrecision>::ElementWiseDivideTensor(
+TDeformationField, TSolverPrecision>::ElementWiseDivideTensor(
     const TensorType tensor1, const TensorType tensor2)
 {
   TensorType outTensor;
@@ -1173,15 +1173,15 @@ TDisplacementField, TSolverPrecision>::ElementWiseDivideTensor(
 }
 
 /** Creates the 'cross product' operating matrix of a vector. */
-template < class TFixedImage, class TMovingImage, class TDisplacementField,
+template < class TFixedImage, class TMovingImage, class TDeformationField,
 class TSolverPrecision >
 typename ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage,
-TDisplacementField, TSolverPrecision>::DisplacementFieldMatrixType
+TDeformationField, TSolverPrecision>::DeformationFieldMatrixType
 ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage,
-TDisplacementField, TSolverPrecision>::CreateCrossProductMatrix(
-    const DisplacementFieldVectorType v)
+TDeformationField, TSolverPrecision>::CreateCrossProductMatrix(
+    const DeformationFieldVectorType v)
 {
-  DisplacementFieldMatrixType m;
+  DeformationFieldMatrixType m;
 
   m(0, 0) = 0;
   m(0, 1) = -v[2];
@@ -1201,13 +1201,13 @@ TDisplacementField, TSolverPrecision>::CreateCrossProductMatrix(
 /**
  * Performs reorientation on a tensor gradient.
  */
-template < class TFixedImage, class TMovingImage, class TDisplacementField,
+template < class TFixedImage, class TMovingImage, class TDeformationField,
 class TSolverPrecision >
 typename ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage,
-TDisplacementField, TSolverPrecision>::TensorGradientType
+TDeformationField, TSolverPrecision>::TensorGradientType
 ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage,
-TDisplacementField, TSolverPrecision>::ReorientateMovingGradient(
-    const DisplacementFieldMatrixType R,
+TDeformationField, TSolverPrecision>::ReorientateMovingGradient(
+    const DeformationFieldMatrixType R,
     const TensorGradientType movingGradient)
 {
   TensorGradientType output;
@@ -1236,12 +1236,12 @@ TDisplacementField, TSolverPrecision>::ReorientateMovingGradient(
 /**
  * Creates a nx3 matrix with a tensor (with n degrees of freedom) in each column.
  */
-template < class TFixedImage, class TMovingImage, class TDisplacementField,
+template < class TFixedImage, class TMovingImage, class TDeformationField,
 class TSolverPrecision >
 typename ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage,
-TDisplacementField, TSolverPrecision>::TensorGradientType
+TDeformationField, TSolverPrecision>::TensorGradientType
 ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage,
-TDisplacementField, TSolverPrecision>::InsertTensorsInTensorGradient(
+TDeformationField, TSolverPrecision>::InsertTensorsInTensorGradient(
     const TensorType tensor0, const TensorType tensor1,
     const TensorType tensor2)
 {
@@ -1257,12 +1257,12 @@ TDisplacementField, TSolverPrecision>::InsertTensorsInTensorGradient(
   return tensorGradient;
 }
 
-template < class TFixedImage, class TMovingImage, class TDisplacementField,
+template < class TFixedImage, class TMovingImage, class TDeformationField,
 class TSolverPrecision >
 typename ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage,
-TDisplacementField, TSolverPrecision>::TensorGradientType
+TDeformationField, TSolverPrecision>::TensorGradientType
 ESMDemonsRegistrationTensorFunction<TFixedImage, TMovingImage,
-TDisplacementField, TSolverPrecision>::ComputeMovingGradient(
+TDeformationField, TSolverPrecision>::ComputeMovingGradient(
     const TensorType movingValue, IndexType index,
     const IndexType firstIndex, const IndexType lastIndex)
 {
