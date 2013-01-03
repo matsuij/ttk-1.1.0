@@ -2,7 +2,7 @@
 #define __itkLogDomainDeformableRegistrationFilter_h
 
 #include "itkDenseFiniteDifferenceImageFilter.h"
-#include "itkExponentialDisplacementFieldImageFilter2.h"
+#include "itkExponentialDisplacementFieldImageFilter_LSD.h"
 #include "itkPDEDeformableRegistrationFunction.h"
 
 #include "stdio.h"

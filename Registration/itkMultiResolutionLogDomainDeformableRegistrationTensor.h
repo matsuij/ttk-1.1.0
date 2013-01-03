@@ -1,7 +1,7 @@
 #ifndef __itkMultiResolutionLogDomainDeformableRegistrationTensor_h
 #define __itkMultiResolutionLogDomainDeformableRegistrationTensor_h
 
-#include "itkExponentialDisplacementFieldImageFilter2.h"
+#include "itkExponentialDisplacementFieldImageFilter_LSD.h"
 #include "itkImage.h"
 #include "itkImageToImageFilter.h"
 #include "itkLogDomainDeformableRegistrationFilter.h"
